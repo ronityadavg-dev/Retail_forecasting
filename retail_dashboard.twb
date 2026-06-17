@@ -1,0 +1,157 @@
+<?xml version='1.0' encoding='utf-8' ?>
+
+<!-- build 20231.23.0214.0925                               -->
+<workbook original-version='18.1' source-build='2023.1.0' source-platform='win' version='18.1' xmlns:user='http://www.tableausoftware.com/xml/user'>
+  <document-format-change-manifest>
+    <_.fcp.AnimationOnByDefault.true...AnimationOnByDefault />
+    <SheetIdentifierTracking />
+  </document-format-change-manifest>
+  <preferences>
+    <preference name='ui.encoding.shelf.height' value='24' />
+    <preference name='ui.shelf.height' value='26' />
+  </preferences>
+
+  <!-- ============================================================== -->
+  <!-- DATASOURCE 1 — predictions_long.csv                            -->
+  <!-- ============================================================== -->
+  <datasources>
+    <datasource caption='Predictions Long' inline='true' name='predictions_long' version='18.1'>
+      <connection class='textscan' directory='../data/processed' filename='predictions_long.csv' password='' server='' username=''>
+        <relation connection='textscan' name='predictions_long.csv' table='[predictions_long#csv]' type='table' />
+      </connection>
+      <column datatype='date'    name='[Date]'  role='dimension' type='ordinal' />
+      <column datatype='string'  name='[model]' role='dimension' type='nominal' />
+      <column datatype='real'    name='[value]' role='measure'   type='quantitative' />
+    </datasource>
+
+    <datasource caption='Model Comparison' inline='true' name='model_comparison' version='18.1'>
+      <connection class='textscan' directory='../data/processed' filename='model_comparison.csv'>
+        <relation connection='textscan' name='model_comparison.csv' table='[model_comparison#csv]' type='table' />
+      </connection>
+      <column datatype='string' name='[model]' role='dimension' type='nominal' />
+      <column datatype='real'   name='[RMSE]'  role='measure'   type='quantitative' />
+      <column datatype='real'   name='[MAPE]'  role='measure'   type='quantitative' />
+      <column datatype='real'   name='[Bias]'  role='measure'   type='quantitative' />
+    </datasource>
+
+    <datasource caption='Financial Sensitivity' inline='true' name='financial_sensitivity' version='18.1'>
+      <connection class='textscan' directory='../data/processed' filename='financial_sensitivity.csv'>
+        <relation connection='textscan' name='financial_sensitivity.csv' table='[financial_sensitivity#csv]' type='table' />
+      </connection>
+      <column datatype='real'   name='[uplift_pct]'    role='dimension' type='ordinal' />
+      <column datatype='real'   name='[discount_rate]' role='dimension' type='ordinal' />
+      <column datatype='real'   name='[npv_gbp_m]'     role='measure'   type='quantitative' />
+      <column datatype='real'   name='[irr_pct]'       role='measure'   type='quantitative' />
+    </datasource>
+  </datasources>
+
+  <!-- ============================================================== -->
+  <!-- WORKSHEET — Forecast Comparison                                -->
+  <!-- ============================================================== -->
+  <worksheets>
+    <worksheet name='Forecast Comparison'>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Predictions Long' name='predictions_long' />
+          </datasources>
+          <datasource-dependencies datasource='predictions_long'>
+            <column datatype='date'   name='[Date]'  role='dimension' type='ordinal' />
+            <column datatype='string' name='[model]' role='dimension' type='nominal' />
+            <column datatype='real'   name='[value]' role='measure'   type='quantitative' />
+          </datasource-dependencies>
+        </view>
+        <rows>[predictions_long].[sum:value:qk]</rows>
+        <cols>[predictions_long].[yr:Date:ok]/[predictions_long].[mn:Date:ok]/[predictions_long].[dy:Date:ok]</cols>
+        <encodings>
+          <color column='[predictions_long].[model]' />
+        </encodings>
+        <style>
+          <style-rule element='mark'>
+            <format attr='mark-type' value='line' />
+          </style-rule>
+        </style>
+      </table>
+    </worksheet>
+
+    <worksheet name='Model Accuracy'>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Model Comparison' name='model_comparison' />
+          </datasources>
+          <datasource-dependencies datasource='model_comparison'>
+            <column datatype='string' name='[model]' role='dimension' type='nominal' />
+            <column datatype='real'   name='[RMSE]'  role='measure'   type='quantitative' />
+            <column datatype='real'   name='[MAPE]'  role='measure'   type='quantitative' />
+            <column datatype='real'   name='[Bias]'  role='measure'   type='quantitative' />
+          </datasource-dependencies>
+        </view>
+        <rows>[model_comparison].[model]</rows>
+        <cols>[Multiple Values]</cols>
+        <encodings>
+          <text column='[model_comparison].[sum:RMSE:qk]' />
+          <text column='[model_comparison].[sum:MAPE:qk]' />
+          <text column='[model_comparison].[sum:Bias:qk]' />
+        </encodings>
+        <style>
+          <style-rule element='mark'>
+            <format attr='mark-type' value='text' />
+          </style-rule>
+        </style>
+      </table>
+    </worksheet>
+
+    <worksheet name='NPV Sensitivity'>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Financial Sensitivity' name='financial_sensitivity' />
+          </datasources>
+          <datasource-dependencies datasource='financial_sensitivity'>
+            <column datatype='real' name='[uplift_pct]'    role='dimension' type='ordinal' />
+            <column datatype='real' name='[discount_rate]' role='dimension' type='ordinal' />
+            <column datatype='real' name='[npv_gbp_m]'     role='measure'   type='quantitative' />
+          </datasource-dependencies>
+        </view>
+        <rows>[financial_sensitivity].[uplift_pct]</rows>
+        <cols>[financial_sensitivity].[discount_rate]</cols>
+        <encodings>
+          <color column='[financial_sensitivity].[sum:npv_gbp_m:qk]' />
+          <text  column='[financial_sensitivity].[sum:npv_gbp_m:qk]' />
+        </encodings>
+        <style>
+          <style-rule element='mark'>
+            <format attr='mark-type' value='square' />
+          </style-rule>
+        </style>
+      </table>
+    </worksheet>
+  </worksheets>
+
+  <!-- ============================================================== -->
+  <!-- DASHBOARD                                                      -->
+  <!-- ============================================================== -->
+  <dashboards>
+    <dashboard name='Retail Forecasting Dashboard'>
+      <style />
+      <size maxheight='900' maxwidth='1400' minheight='900' minwidth='1400' />
+      <zones>
+        <zone h='100000' id='1' type-v2='layout-basic' w='100000' x='0' y='0'>
+          <zone h='8000' id='4' param='vert' type-v2='title' w='100000' x='0' y='0'>
+            <formatted-text>
+              <run fontsize='24' bold='true'>Retail Forecasting &amp; Performance Analytics</run>
+            </formatted-text>
+          </zone>
+          <zone h='46000' id='5' name='Forecast Comparison' w='100000' x='0' y='8000' />
+          <zone h='46000' id='6' name='Model Accuracy' w='40000' x='0' y='54000' />
+          <zone h='46000' id='7' name='NPV Sensitivity' w='60000' x='40000' y='54000' />
+        </zone>
+      </zones>
+    </dashboard>
+  </dashboards>
+
+  <windows source-height='30'>
+    <window class='dashboard' maximized='true' name='Retail Forecasting Dashboard' />
+  </windows>
+</workbook>
